@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\RequestLog;
 use App\Models\SolicitacaoTrabalhador;
 use App\Services\DataprevService;
 use Illuminate\Http\Request;
@@ -172,6 +173,8 @@ class DataprevController extends Controller
 
         $response = $this->dataprevService->incluirProposta($data);
 
+        $this->logRequest($request, 'inclusao-proposta', $response['status']);
+
         return response()->json($response, $response['status']);
     }
 
@@ -246,6 +249,8 @@ class DataprevController extends Controller
         ]);
 
         $response = $this->dataprevService->incluirPropostaPortabilidade($data);
+
+        $this->logRequest($request, 'inclusao-portabilidade', $response['status']);
 
         return response()->json($response, $response['status']);
     }
@@ -398,6 +403,9 @@ class DataprevController extends Controller
             }
         }
 
+        $resultsCount = is_array($response['data']) ? count($response['data']) : null;
+        $this->logRequest($request, 'solicitacoes-trabalhador', $response['status'], $resultsCount);
+
         return response()->json($response, $response['status']);
     }
 
@@ -465,6 +473,22 @@ class DataprevController extends Controller
 
         $response = $this->dataprevService->consultarSolicitacoesTrabalhadorPortabilidadePaginado($params);
 
+        $this->logRequest($request, 'solicitacoes-portabilidade', $response['status']);
+
         return response()->json($response, $response['status']);
+    }
+
+    private function logRequest(Request $request, string $endpoint, int $status, ?int $resultsCount = null): void
+    {
+        try {
+            RequestLog::create([
+                'client_token'  => $request->attributes->get('dataprev_client', 'desconhecido'),
+                'endpoint'      => $endpoint,
+                'http_status'   => $status,
+                'results_count' => $resultsCount,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Dataprev RequestLog Error', ['error' => $e->getMessage()]);
+        }
     }
 }

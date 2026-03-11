@@ -19,10 +19,21 @@
 
 <nav class="navbar navbar-dark bg-dark mb-4">
     <div class="container">
-        <span class="navbar-brand">
-            <i class="bi bi-shield-lock me-2"></i>Dataprev Admin
-        </span>
         <div class="d-flex align-items-center gap-3">
+            <span class="navbar-brand mb-0">
+                <i class="bi bi-shield-lock me-2"></i>Dataprev Admin
+            </span>
+            <a href="{{ route('admin.dashboard') }}"
+               class="text-white-50 small text-decoration-none {{ request()->routeIs('admin.dashboard') ? 'text-white fw-semibold' : '' }}">
+                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+            <a href="{{ route('admin.tokens.index') }}"
+               class="text-white-50 small text-decoration-none {{ request()->routeIs('admin.tokens.*') ? 'text-white fw-semibold' : '' }}">
+                <i class="bi bi-key me-1"></i>Tokens
+            </a>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span id="relogio" class="text-white-50 small font-monospace"></span>
             <span class="text-white-50 small">{{ Auth::user()->name }}</span>
             <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
@@ -53,6 +64,14 @@
 </div>
 
 <script>
+(function tick() {
+    const now = new Date();
+    const d = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const t = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('relogio').textContent = d + '  ' + t;
+    setTimeout(tick, 1000);
+})();
+
 function copyToClipboard(text) {
     const done = () => {
         const toast = new bootstrap.Toast(document.getElementById('copyToast'), { delay: 2500 });
@@ -74,5 +93,6 @@ function copyToClipboard(text) {
     }
 }
 </script>
+@yield('scripts')
 </body>
 </html>

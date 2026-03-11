@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\ClientTokenController;
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Redireciona raiz para o painel admin
@@ -14,7 +15,8 @@ Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.log
 
 // Painel admin (protegido por autenticação)
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', fn () => redirect()->route('admin.tokens.index'));
+    Route::get('/', fn () => redirect()->route('admin.dashboard'));
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('tokens', ClientTokenController::class, [
         'parameters' => ['tokens' => 'clientToken'],
