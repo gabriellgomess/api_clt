@@ -1,0 +1,163 @@
+================================================================================
+DIAGNÓSTICO - ERRO 500 COM LOG VAZIO
+================================================================================
+
+Execute cada comando abaixo no servidor e me envie a saída:
+
+================================================================================
+1. VERIFICAR SINTAXE PHP
+================================================================================
+cd /var/www/html/dataprev
+
+# Verificar se há erros de sintaxe
+php -l artisan
+php -l config/l5-swagger.php
+php -l app/Http/Controllers/Api/DataprevController.php
+
+================================================================================
+2. VERIFICAR PERMISSÕES DO LOG
+================================================================================
+# Ver permissões do diretório de logs
+ls -la storage/logs/
+
+# Verificar se o Laravel consegue escrever
+touch storage/logs/test.log
+echo "teste" > storage/logs/test.log
+cat storage/logs/test.log
+
+# Se funcionou, deletar o teste
+rm storage/logs/test.log
+
+================================================================================
+3. HABILITAR DEBUG TEMPORARIAMENTE
+================================================================================
+# Editar o .env e mudar:
+nano .env
+
+# Alterar estas linhas:
+APP_DEBUG=true
+LOG_LEVEL=debug
+
+# Salvar (Ctrl+O, Enter, Ctrl+X)
+
+# Limpar cache de config
+php artisan config:clear
+
+================================================================================
+4. TESTAR SE O LARAVEL FUNCIONA
+================================================================================
+# Testar rota básica da API dataprev
+curl -v https://monbank.co/api/dataprev/token \
+  -H "Authorization: Bearer tWuqmiEuQMYt8BxF3X3qJhXWO2vbBxrSuQAfxH98IRU3L8zD7jeMGULXjMpEAR3S"
+
+# Ver o que retorna
+
+================================================================================
+5. VERIFICAR LOG DO APACHE
+================================================================================
+# Ver últimas linhas do log de erro do Apache
+sudo tail -50 /var/log/apache2/error.log
+
+# Filtrar apenas erros da dataprev
+sudo tail -100 /var/log/apache2/error.log | grep -i dataprev
+
+================================================================================
+6. VERIFICAR SE O AUTOLOAD ESTÁ CORRETO
+================================================================================
+cd /var/www/html/dataprev
+
+# Regenerar autoload
+composer dump-autoload
+
+# Limpar todos os caches
+php artisan optimize:clear
+
+================================================================================
+7. VERIFICAR PROVIDER DO L5-SWAGGER
+================================================================================
+# Ver se o provider está registrado
+php artisan about | grep -i swagger
+
+# Ou ver a lista de providers
+php artisan package:discover
+
+================================================================================
+8. TENTAR GERAR SWAGGER MANUALMENTE
+================================================================================
+cd /var/www/html/dataprev
+
+# Tentar gerar e ver se dá erro
+php artisan l5-swagger:generate 2>&1
+
+================================================================================
+9. VERIFICAR STORAGE E BOOTSTRAP/CACHE
+================================================================================
+# Ver permissões
+ls -la storage/
+ls -la bootstrap/cache/
+
+# Se necessário, recriar bootstrap/cache
+rm -rf bootstrap/cache/*.php
+php artisan optimize
+
+================================================================================
+10. ACESSAR OUTRAS ROTAS PARA COMPARAR
+================================================================================
+# Testar uma rota que sabemos que funciona
+curl -v https://monbank.co/api/dataprev/propostas/solicitacoes-trabalhador?codigoSolicitante=0526 \
+  -H "Authorization: Bearer tWuqmiEuQMYt8BxF3X3qJhXWO2vbBxrSuQAfxH98IRU3L8zD7jeMGULXjMpEAR3S"
+
+# Comparar com o Swagger
+curl -v https://monbank.co/api/dataprev/documentation
+
+================================================================================
+COMANDOS RESUMIDOS PARA EXECUTAR
+================================================================================
+
+Execute TUDO de uma vez e me envie a saída:
+
+cd /var/www/html/dataprev
+
+echo "=== 1. SINTAXE PHP ==="
+php -l artisan
+php -l config/l5-swagger.php
+
+echo ""
+echo "=== 2. PERMISSÕES LOG ==="
+ls -la storage/logs/
+touch storage/logs/test.log && rm storage/logs/test.log && echo "OK - consegue escrever"
+
+echo ""
+echo "=== 3. HABILITAR DEBUG ==="
+sed -i 's/APP_DEBUG=false/APP_DEBUG=true/g' .env
+sed -i 's/LOG_LEVEL=error/LOG_LEVEL=debug/g' .env
+php artisan config:clear
+
+echo ""
+echo "=== 4. AUTOLOAD ==="
+composer dump-autoload --optimize
+
+echo ""
+echo "=== 5. LIMPAR CACHES ==="
+php artisan optimize:clear
+
+echo ""
+echo "=== 6. GERAR SWAGGER ==="
+php artisan l5-swagger:generate 2>&1
+
+echo ""
+echo "=== 7. VERIFICAR ROTAS ==="
+php artisan route:list | grep documentation
+
+echo ""
+echo "=== 8. LOG APACHE ==="
+sudo tail -30 /var/log/apache2/error.log
+
+echo ""
+echo "=== 9. TESTAR ROTA ==="
+curl -I https://monbank.co/api/dataprev/documentation
+
+echo ""
+echo "=== FIM DO DIAGNÓSTICO ==="
+
+================================================================================

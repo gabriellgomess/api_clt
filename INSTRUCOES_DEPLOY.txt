@@ -1,0 +1,147 @@
+================================================================================
+📦 GUIA RÁPIDO - DEPLOY API DATAPREV NO SERVIDOR MONBANK.CO
+================================================================================
+
+🎯 OBJETIVO
+-----------
+Instalar a aplicação API Dataprev no servidor monbank.co que já possui outras
+aplicações Laravel e React rodando.
+
+📁 ESTRUTURA NO SERVIDOR
+------------------------
+/var/www/html/
+├── backend/              (Laravel existente)
+├── abrasuaconta/        (Frontend React)
+├── dataprev/            ← NOVA APLICAÇÃO (esta)
+└── .htaccess            ← ATUALIZAR
+
+🔧 PASSOS PARA DEPLOY
+---------------------
+
+1️⃣ FAZER UPLOAD DOS ARQUIVOS
+   - Fazer upload de TODO o diretório "dataprev" para /var/www/html/dataprev
+   - Via FTP, SFTP ou rsync
+
+2️⃣ ATUALIZAR .htaccess DA RAIZ
+   - Arquivo: /var/www/html/.htaccess
+   - Usar o conteúdo do arquivo: .htaccess-server-root
+   - IMPORTANTE: A regra do /api/dataprev deve vir ANTES da regra do /api
+
+3️⃣ CONFIGURAR .ENV
+   - Copiar: .env.production → .env
+   - Ajustar se necessário:
+     * DATAPREV_PFX_PATH (caminho do certificado)
+     * APP_URL (domínio do servidor)
+
+4️⃣ FAZER UPLOAD DO CERTIFICADO
+   - Arquivo: certificado.pfx
+   - Destino: /var/www/html/dataprev/storage/certs/certificado.pfx
+   - Permissões: 600
+   - Owner: www-data:www-data
+
+5️⃣ EXECUTAR COMANDOS NO SERVIDOR (via SSH)
+
+   cd /var/www/html/dataprev
+
+   # Instalar dependências
+   composer install --optimize-autoloader --no-dev
+
+   # Configurar permissões
+   chmod -R 755 .
+   chmod -R 775 storage bootstrap/cache
+   chown -R www-data:www-data storage bootstrap/cache
+
+   # Otimizar aplicação
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   php artisan l5-swagger:generate
+
+6️⃣ TESTAR A API
+
+   curl -X GET \
+     'https://monbank.co/api/dataprev/propostas/solicitacoes-trabalhador?codigoSolicitante=0526' \
+     -H 'Authorization: Bearer tWuqmiEuQMYt8BxF3X3qJhXWO2vbBxrSuQAfxH98IRU3L8zD7jeMGULXjMpEAR3S'
+
+📚 ARQUIVOS IMPORTANTES
+-----------------------
+
+🔸 PARA COPIAR PARA O SERVIDOR:
+   - dataprev/ (diretório inteiro)
+   - certificado.pfx (separadamente, em storage/certs/)
+
+🔸 PARA CONFIGURAR NO SERVIDOR:
+   - /.htaccess (raiz) ← usar .htaccess-server-root como template
+   - /dataprev/.env ← usar .env.production como template
+
+🔸 DOCUMENTAÇÃO:
+   - DEPLOY.md ← Guia completo de deploy
+   - README_DATAPREV.md ← Documentação da aplicação
+   - deploy.sh ← Script automático de deploy
+
+🌐 URLS EM PRODUÇÃO
+-------------------
+Base URL:     https://monbank.co/api/dataprev
+Swagger UI:   https://monbank.co/api/dataprev/documentation
+
+📋 ENDPOINTS DISPONÍVEIS
+------------------------
+POST   /api/dataprev/token
+POST   /api/dataprev/propostas/inclusao
+GET    /api/dataprev/propostas/solicitacoes-trabalhador
+POST   /api/dataprev/propostas-portabilidade/inclusao
+GET    /api/dataprev/propostas-portabilidade/solicitacoes-trabalhador-paginado
+
+🔐 AUTENTICAÇÃO
+---------------
+Todas as requisições devem incluir o header:
+
+Authorization: Bearer tWuqmiEuQMYt8BxF3X3qJhXWO2vbBxrSuQAfxH98IRU3L8zD7jeMGULXjMpEAR3S
+
+⚠️ PONTOS DE ATENÇÃO
+--------------------
+1. A regra no .htaccess da RAIZ deve vir ANTES da regra genérica do /api
+2. O certificado .pfx deve ter permissões 600 e owner www-data
+3. O diretório storage/ deve ter permissões 775
+4. Em produção: APP_DEBUG=false e LOG_LEVEL=error
+
+🐛 TROUBLESHOOTING
+------------------
+Erro 500:
+  → Verificar storage/logs/laravel.log
+  → Verificar permissões do storage/
+
+Erro 404:
+  → Verificar se .htaccess da raiz foi atualizado
+  → Verificar se mod_rewrite está habilitado
+
+Token OAuth2 não funciona:
+  → Verificar se certificado.pfx existe
+  → Verificar permissões do certificado (600)
+  → Verificar logs: grep "Dataprev" storage/logs/laravel.log
+
+📞 SUPORTE
+----------
+Documentação completa: DEPLOY.md
+Logs da aplicação: /var/www/html/dataprev/storage/logs/laravel.log
+
+✅ CHECKLIST DE DEPLOY
+----------------------
+[ ] Upload dos arquivos para /var/www/html/dataprev
+[ ] Atualizar .htaccess da raiz
+[ ] Configurar .env (copiar de .env.production)
+[ ] Upload do certificado.pfx
+[ ] Configurar permissões (755 geral, 775 storage)
+[ ] Executar composer install --no-dev
+[ ] Executar php artisan config:cache
+[ ] Executar php artisan route:cache
+[ ] Executar php artisan l5-swagger:generate
+[ ] Testar endpoint com curl
+[ ] Verificar logs
+[ ] Documentar para o time
+
+================================================================================
+Deploy realizado em: _______________
+Por: _______________
+Status: _______________
+================================================================================

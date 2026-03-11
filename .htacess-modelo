@@ -1,0 +1,36 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirecionar tudo do domínio antigo para o novo caminho
+    RewriteCond %{HTTP_HOST} ^abrasuaconta\.monbank\.co$ [NC]
+    RewriteRule ^(.*)$ https://monbank.co/abrasuaconta/$1 [L,R=301]
+
+    # 1. Permite o acesso direto a arquivos no diretório /storage
+    RewriteCond %{REQUEST_URI} ^/storage/ [NC]
+    RewriteRule ^ - [L]
+
+    # 2. Ignora URLs que são arquivos ou diretórios existentes
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 3. NOVO: Redirecionar URLs da API Dataprev para a aplicação Laravel separada
+    # Rotas: /api/dataprev/* -> /dataprev/public/api/dataprev/*
+    RewriteCond %{REQUEST_URI} ^/api/dataprev [NC]
+    RewriteRule ^api/dataprev/(.*)$ /dataprev/public/api/dataprev/$1 [L,QSA]
+
+    # 4. Redirecionar URLs que começam com /api para o backend Laravel principal
+    RewriteCond %{REQUEST_URI} ^/api [NC]
+    RewriteRule ^api/(.*)$ /backend/public/api/$1 [L,QSA]
+
+    # 5. Redirecionar URLs do API Gateway para a pasta correta
+    RewriteCond %{REQUEST_URI} ^/api-gateway [NC]
+    RewriteRule ^api-gateway/(.*)$ /api-gateway/public/$1 [L,QSA]
+
+    # 6. Roteamento padrão do Laravel (para rotas específicas do backend)
+    RewriteCond %{REQUEST_URI} ^/backend [NC]
+    RewriteRule ^backend/(.*)$ /backend/public/$1 [L,QSA]
+
+    # 7. Redirecionar todas as outras rotas para o index.html do React
+    RewriteRule ^ index.html [L]
+</IfModule>

@@ -1,0 +1,736 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Mon-Dataprev e-Consignado API",
+        "description": "API de integração Mon-Dataprev com o sistema e-Consignado para operações de consignado CTPS.",
+        "contact": {
+            "email": "gabriel.gomes@outlook.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/dataprev/token": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Obtém token de acesso OAuth2",
+                "description": "Obtém um novo token de acesso OAuth2 da Dataprev. O token é cacheado automaticamente por 55 minutos.",
+                "operationId": "10dc8450eb6c3b07ce16b0e959a5e509",
+                "parameters": [
+                    {
+                        "name": "refresh",
+                        "in": "query",
+                        "description": "Se true, força a renovação do token (ignora cache)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token obtido com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ4NXQiOiJxLUZpUURHNEFhWjh2NjN..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token de autenticação do cliente inválido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token de autenticação inválido ou não fornecido."
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro ao obter token OAuth2",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Não foi possível obter o token de acesso"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "dataprevAuth": []
+                    }
+                ]
+            }
+        },
+        "/dataprev/propostas/inclusao": {
+            "post": {
+                "tags": [
+                    "Propostas CTPS"
+                ],
+                "summary": "Inclusão de Proposta CTPS",
+                "description": "Realiza a inclusão de uma proposta de consignado no sistema Dataprev e-Consignado.",
+                "operationId": "9376416341fd4635019b77eceb070751",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "numeroProposta",
+                                    "idSolicitacaoProposta",
+                                    "dataHoraValidadeProposta",
+                                    "numeroParcelas",
+                                    "valorParcela",
+                                    "valorLiberado",
+                                    "valorEmprestimo",
+                                    "valorIOF",
+                                    "valorTaxaAnual",
+                                    "valorCETAnual",
+                                    "valorTaxaMensal",
+                                    "valorCETMensal",
+                                    "contatos"
+                                ],
+                                "properties": {
+                                    "codigoSolicitante": {
+                                        "description": "Código do solicitante (opcional, usa valor do .env se não informado)",
+                                        "type": "string",
+                                        "example": "0526"
+                                    },
+                                    "numeroProposta": {
+                                        "description": "Número da proposta (12 dígitos)",
+                                        "type": "string",
+                                        "example": "199912345678"
+                                    },
+                                    "idSolicitacaoProposta": {
+                                        "description": "ID da solicitação da proposta",
+                                        "type": "integer",
+                                        "example": 30774347
+                                    },
+                                    "dataHoraValidadeProposta": {
+                                        "description": "Data/hora de validade (DDMMYYYYHHmmss)",
+                                        "type": "string",
+                                        "example": "31012030100000"
+                                    },
+                                    "numeroParcelas": {
+                                        "description": "Número de parcelas",
+                                        "type": "integer",
+                                        "example": 24
+                                    },
+                                    "valorParcela": {
+                                        "description": "Valor de cada parcela",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 200
+                                    },
+                                    "valorLiberado": {
+                                        "description": "Valor liberado ao trabalhador",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1000
+                                    },
+                                    "valorEmprestimo": {
+                                        "description": "Valor total do empréstimo",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500
+                                    },
+                                    "valorIOF": {
+                                        "description": "Valor do IOF",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.1
+                                    },
+                                    "valorTaxaAnual": {
+                                        "description": "Taxa de juros anual (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1.2
+                                    },
+                                    "valorCETAnual": {
+                                        "description": "Custo Efetivo Total anual (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1
+                                    },
+                                    "valorTaxaMensal": {
+                                        "description": "Taxa de juros mensal (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.5
+                                    },
+                                    "valorCETMensal": {
+                                        "description": "Custo Efetivo Total mensal (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.5
+                                    },
+                                    "contatos": {
+                                        "description": "Lista de contatos do trabalhador",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "tipo",
+                                                "contato"
+                                            ],
+                                            "properties": {
+                                                "tipo": {
+                                                    "description": "Tipo de contato (3=email)",
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "contato": {
+                                                    "description": "Valor do contato",
+                                                    "type": "string",
+                                                    "example": "meajuda@monbank.net"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Proposta incluída com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autorizado"
+                    },
+                    "422": {
+                        "description": "Erro de validação dos dados"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "dataprevAuth": []
+                    }
+                ]
+            }
+        },
+        "/dataprev/propostas-portabilidade/inclusao": {
+            "post": {
+                "tags": [
+                    "Portabilidade CTPS"
+                ],
+                "summary": "Inclusão de Proposta de Portabilidade CTPS",
+                "description": "Realiza a inclusão de uma proposta de portabilidade de consignado no sistema Dataprev.",
+                "operationId": "ddf873a5d3a448f2d4898dad9542625d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "numeroProposta",
+                                    "idSolicitacaoProposta",
+                                    "dataHoraValidadeProposta",
+                                    "numeroParcelas",
+                                    "valorParcela",
+                                    "valorEmprestimo",
+                                    "valorTaxaAnual",
+                                    "valorCETAnual",
+                                    "valorTaxaMensal",
+                                    "valorCETMensal",
+                                    "contatos"
+                                ],
+                                "properties": {
+                                    "codigoSolicitante": {
+                                        "description": "Código do solicitante (opcional)",
+                                        "type": "string",
+                                        "example": "0526"
+                                    },
+                                    "numeroProposta": {
+                                        "description": "Número da proposta (12 dígitos)",
+                                        "type": "string",
+                                        "example": "199912345678"
+                                    },
+                                    "idSolicitacaoProposta": {
+                                        "description": "ID da solicitação da proposta",
+                                        "type": "integer",
+                                        "example": 1234
+                                    },
+                                    "dataHoraValidadeProposta": {
+                                        "description": "Data/hora de validade (DDMMYYYYHHmmss)",
+                                        "type": "string",
+                                        "example": "28102025103500"
+                                    },
+                                    "numeroParcelas": {
+                                        "description": "Número de parcelas",
+                                        "type": "integer",
+                                        "example": 24
+                                    },
+                                    "valorParcela": {
+                                        "description": "Valor de cada parcela",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 200
+                                    },
+                                    "valorEmprestimo": {
+                                        "description": "Valor total do empréstimo",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500
+                                    },
+                                    "valorTaxaAnual": {
+                                        "description": "Taxa de juros anual (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1.2
+                                    },
+                                    "valorCETAnual": {
+                                        "description": "CET anual (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1
+                                    },
+                                    "valorTaxaMensal": {
+                                        "description": "Taxa de juros mensal (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.5
+                                    },
+                                    "valorCETMensal": {
+                                        "description": "CET mensal (%)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.5
+                                    },
+                                    "contatos": {
+                                        "description": "Lista de contatos",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "tipo",
+                                                "contato"
+                                            ],
+                                            "properties": {
+                                                "tipo": {
+                                                    "description": "Tipo de contato (3=email)",
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "contato": {
+                                                    "description": "Valor do contato",
+                                                    "type": "string",
+                                                    "example": "email@example.com"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Proposta de portabilidade incluída com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autorizado"
+                    },
+                    "422": {
+                        "description": "Erro de validação dos dados"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "dataprevAuth": []
+                    }
+                ]
+            }
+        },
+        "/dataprev/propostas/solicitacoes-trabalhador": {
+            "get": {
+                "tags": [
+                    "Propostas CTPS"
+                ],
+                "summary": "Consulta Solicitações do Trabalhador",
+                "description": "Consulta as solicitações de propostas do trabalhador no sistema Dataprev.",
+                "operationId": "39bf9afd1ea50b8fb148bc0cd0d417ac",
+                "parameters": [
+                    {
+                        "name": "codigoSolicitante",
+                        "in": "query",
+                        "description": "Código do solicitante (opcional, usa valor do .env se não informado)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "0526"
+                        }
+                    },
+                    {
+                        "name": "idSolicitacaoProposta",
+                        "in": "query",
+                        "description": "ID específico de uma solicitação de proposta",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 30774347
+                        }
+                    },
+                    {
+                        "name": "nroPagina",
+                        "in": "query",
+                        "description": "Número da página para paginação",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "dataHoraInicio",
+                        "in": "query",
+                        "description": "Data/hora de início para filtro (formato DDMMYYYYHHmmss)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "dataHoraFim",
+                        "in": "query",
+                        "description": "Data/hora de fim para filtro (formato DDMMYYYYHHmmss)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Consulta realizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "description": "Lista de solicitações do trabalhador",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "idSolicitacao": {
+                                                        "description": "ID da solicitação",
+                                                        "type": "integer",
+                                                        "example": 10000001
+                                                    },
+                                                    "cpf": {
+                                                        "description": "CPF do trabalhador (sem formatação)",
+                                                        "type": "integer",
+                                                        "example": 12345678900
+                                                    },
+                                                    "matricula": {
+                                                        "description": "Matrícula do trabalhador",
+                                                        "type": "string",
+                                                        "example": "MAT000001"
+                                                    },
+                                                    "inscricaoEmpregador": {
+                                                        "description": "Tipo de inscrição do empregador",
+                                                        "properties": {
+                                                            "codigo": {
+                                                                "description": "1=CNPJ, 2=CPF",
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "descricao": {
+                                                                "type": "string",
+                                                                "example": "CNPJ"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "numeroInscricaoEmpregador": {
+                                                        "description": "CNPJ ou CPF do empregador",
+                                                        "type": "integer",
+                                                        "example": 11222333000100
+                                                    },
+                                                    "valorLiberado": {
+                                                        "description": "Valor liberado para empréstimo",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 5000
+                                                    },
+                                                    "nroParcelas": {
+                                                        "description": "Número de parcelas",
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "dataHoraValidadeSolicitacao": {
+                                                        "description": "Validade da solicitação (DDMMYYYYHHmmss)",
+                                                        "type": "string",
+                                                        "example": "10032026120000"
+                                                    },
+                                                    "nomeTrabalhador": {
+                                                        "description": "Nome completo do trabalhador",
+                                                        "type": "string",
+                                                        "example": "João da Silva"
+                                                    },
+                                                    "dataNascimento": {
+                                                        "description": "Data de nascimento (DDMMYYYY)",
+                                                        "type": "string",
+                                                        "example": "15061990"
+                                                    },
+                                                    "margemDisponivel": {
+                                                        "description": "Margem consignável disponível",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 3500
+                                                    },
+                                                    "elegivelEmprestimo": {
+                                                        "description": "Se o trabalhador é elegível",
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "dataAdmissao": {
+                                                        "description": "Data de admissão (DDMMYYYY)",
+                                                        "type": "string",
+                                                        "example": "01032020"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autorizado"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "dataprevAuth": []
+                    }
+                ]
+            }
+        },
+        "/dataprev/propostas-portabilidade/solicitacoes-trabalhador-paginado": {
+            "get": {
+                "tags": [
+                    "Portabilidade CTPS"
+                ],
+                "summary": "Consulta Solicitações do Trabalhador Paginado (Portabilidade)",
+                "description": "Consulta as solicitações de propostas de portabilidade do trabalhador com paginação.",
+                "operationId": "2b51496182e73da7d7f15374fd8616d6",
+                "parameters": [
+                    {
+                        "name": "codigoSolicitante",
+                        "in": "query",
+                        "description": "Código do solicitante (opcional, usa valor do .env se não informado)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "0526"
+                        }
+                    },
+                    {
+                        "name": "idSolicitacaoProposta",
+                        "in": "query",
+                        "description": "ID específico de uma solicitação de proposta",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 30774347
+                        }
+                    },
+                    {
+                        "name": "dataHoraInicio",
+                        "in": "query",
+                        "description": "Data/hora de início para filtro (formato DDMMYYYYHHmmss)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "dataHoraFim",
+                        "in": "query",
+                        "description": "Data/hora de fim para filtro (formato DDMMYYYYHHmmss)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Consulta realizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "description": "Dados paginados das solicitações de portabilidade",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autorizado"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "dataprevAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "dataprevAuth": {
+                "type": "http",
+                "description": "Token de autenticação do cliente. Envie no header Authorization: Bearer {token}",
+                "bearerFormat": "token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Autenticação",
+            "description": "Endpoints de autenticação e token OAuth2"
+        },
+        {
+            "name": "Propostas CTPS",
+            "description": "Endpoints para inclusão e consulta de propostas CTPS"
+        },
+        {
+            "name": "Portabilidade CTPS",
+            "description": "Endpoints para inclusão e consulta de propostas de portabilidade CTPS"
+        }
+    ]
+}
