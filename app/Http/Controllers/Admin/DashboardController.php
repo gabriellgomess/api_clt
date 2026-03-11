@@ -19,8 +19,9 @@ class DashboardController extends Controller
             ->when($clientFilter, fn ($q) => $q->where('client_token', $clientFilter))
             ->where('created_at', '>=', now()->subDays($days - 1)->startOfDay());
 
-        // Cards: resumo por cliente
-        $perClient = RequestLog::selectRaw('client_token, count(*) as total_requests, COALESCE(sum(results_count), 0) as total_results')
+        // Cards: resumo por cliente (respeita filtro de cliente e período)
+        $perClient = $baseQuery()
+            ->selectRaw('client_token, count(*) as total_requests, COALESCE(sum(results_count), 0) as total_results')
             ->groupBy('client_token')
             ->orderByDesc('total_requests')
             ->get();
@@ -50,8 +51,11 @@ class DashboardController extends Controller
         $clientLabels = $perClient->pluck('client_token');
         $clientData   = $perClient->pluck('total_requests');
 
-        // Gráfico 4: execuções por dia agrupado por cliente (últimos N dias, linha por cliente)
-        $allClients = RequestLog::distinct()->pluck('client_token');
+        // Gráfico 4: execuções por dia agrupado por cliente
+        // Quando filtrado, mostra só o cliente selecionado; caso contrário, todos
+        $allClients = $clientFilter
+            ? collect([$clientFilter])
+            : RequestLog::distinct()->pluck('client_token');
 
         $byClientDay = $baseQuery()
             ->selectRaw('client_token, DATE(created_at) as date, count(*) as total')
