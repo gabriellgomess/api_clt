@@ -18,7 +18,7 @@
     <div class="alert alert-success alert-dismissible shadow-sm" role="alert">
         <div class="fw-semibold mb-1">
             <i class="bi bi-key-fill me-1"></i>
-            Token <strong>{{ session('new_alias') }}</strong> — copie agora, não será exibido novamente:
+            Token <strong>{{ session('new_alias') }}</strong> gerado com sucesso:
         </div>
         <div class="d-flex align-items-center gap-2 mt-2">
             <code class="token-code flex-grow-1 bg-white border rounded px-3 py-2 d-block">{{ session('new_token') }}</code>

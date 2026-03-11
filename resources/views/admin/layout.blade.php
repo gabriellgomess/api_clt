@@ -39,18 +39,39 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- Toast de confirmação de cópia --}}
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="copyToast" class="toast align-items-center text-bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle me-2"></i>Token copiado para a área de transferência.
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
 <script>
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        const btn = event.currentTarget;
-        const original = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check-lg"></i>';
-        btn.classList.replace('btn-outline-secondary', 'btn-success');
-        setTimeout(() => {
-            btn.innerHTML = original;
-            btn.classList.replace('btn-success', 'btn-outline-secondary');
-        }, 1500);
-    });
+    const done = () => {
+        const toast = new bootstrap.Toast(document.getElementById('copyToast'), { delay: 2500 });
+        toast.show();
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done);
+    } else {
+        // Fallback para HTTP
+        const el = document.createElement('textarea');
+        el.value = text;
+        el.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        done();
+    }
 }
 </script>
 </body>
